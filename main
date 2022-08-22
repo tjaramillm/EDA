@@ -1,0 +1,15 @@
+import numpy as np
+import csv
+def arre(arreglo):
+  with open('medellin.csv', newline='') as csvfile:
+   spamreader = csv.reader(csvfile, delimiter=';')
+   for row in spamreader:
+    arreglo = np.append(arreglo,[row],axis= 0)
+   return arreglo
+   
+def main():
+  arreglo=np.array([["a","b","c","d","e","f","g"]])
+  arreglo=arre(arreglo)
+  arreglo=arreglo[2:]
+  print(arreglo)
+main()
