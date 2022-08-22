@@ -1,0 +1,7 @@
+import csv
+arreglo=[]
+with open('medellin.csv', newline='') as csvfile:
+   spamreader = csv.reader(csvfile, delimiter=';')
+   for row in spamreader:
+    arreglo.append(row)
+arreglo=arreglo[1:]
