@@ -1,1 +1,207 @@
+import numpy as np
+import csv
+import sys
+import geopandas as gpd
+import pandas as pd
+import matplotlib.pyplot as plt
+from shapely import wkt
+
+
+def lector(arreglo):
+  with open('medellin.csv', newline='') as csvfile:
+   spamreader = csv.reader(csvfile, delimiter=';')
+   for row in spamreader:
+    arreglo = np.append(arreglo,[row],axis= 0)
+   return arreglo
+    
+def value(init_graph, node1, node2):
+  try:
+    num=float(init_graph[node1][node2])
+  except:
+    num=0.5
+  return num
+  
+def get_outgoing_edges(node, arreglo):
+        connections = []
+        for i in range(2,len(arreglo)):
+          if arreglo[i][1]==node:
+            connections.append(arreglo[i][2])
+        return connections
+  
+def dijkstra_algorithm(init_graph, nodo_inicial, nodo_final, Lista_nodos_sinRepetir,arreglo):
+    nodos_sin_visitar = Lista_nodos_sinRepetir
+    
+    camino_corto = {}
+    Nodos_previos = {}
+ 
+    infinito = sys.maxsize
+    for node in nodos_sin_visitar:
+        camino_corto[node] = infinito
+    camino_corto[nodo_inicial] = 0
+    
+    while nodos_sin_visitar:
+        nodo_minimo_actual = None
+        for node in nodos_sin_visitar:
+            if nodo_minimo_actual == None:
+                nodo_minimo_actual = node
+            elif camino_corto[node] < camino_corto[nodo_minimo_actual]:
+                nodo_minimo_actual = node
+                
+        vecinos = get_outgoing_edges(nodo_minimo_actual,arreglo)
+        for vecino in vecinos:
+            valor_tentativo = camino_corto[nodo_minimo_actual] + value(init_graph,nodo_minimo_actual, vecino)
+            if valor_tentativo < camino_corto[vecino]:
+                camino_corto[vecino] = valor_tentativo
+                Nodos_previos[vecino] = nodo_minimo_actual
+
+        nodos_sin_visitar.remove(nodo_minimo_actual)
+    
+    return Nodos_previos, camino_corto 
+
+def construirgrafo_longitud():
+  Lista_nodos_sinRepetir=[]
+  init_graph={}
+  arreglo=np.array([["a","b","c","d","e","f","g"]])
+  arreglo=lector(arreglo)
+  Lista_nodos_repetidos=[]
+  for i in range(2,len(arreglo)):
+    Lista_nodos_repetidos.append(arreglo[i][1])
+    Lista_nodos_repetidos.append(arreglo[i][2])
+  for nodo in Lista_nodos_repetidos:
+    if nodo not in Lista_nodos_sinRepetir:
+      Lista_nodos_sinRepetir.append(nodo)
+  for node in Lista_nodos_sinRepetir:
+    init_graph[node]={}
+  for i in range(2,len(arreglo)):
+    if arreglo[i][4]=="True":
+      init_graph[arreglo[i][1]][arreglo[i][2]]=arreglo[i][3]
+    else:
+      init_graph[arreglo[i][1]][arreglo[i][2]]=arreglo[i][3]
+      init_graph[arreglo[i][2]][arreglo[i][1]]=arreglo[i][3]
+  return init_graph
+  
+def contruirgrafo(Lista_nodos_sinRepetir,arreglo,opcion):
+  if opcion==1:
+    opcion=3
+  elif opcion==2:
+    opcion=5
+  else:
+    opcion=4
+  if opcion in [3,5]:
+    init_graph={}
+    for node in Lista_nodos_sinRepetir:
+      init_graph[node]={}
+    for i in range(2,len(arreglo)):
+      if arreglo[i][4]=="True":
+        init_graph[arreglo[i][1]][arreglo[i][2]]=arreglo[i][opcion]
+      else:
+        init_graph[arreglo[i][1]][arreglo[i][2]]=arreglo[i][opcion]
+        init_graph[arreglo[i][2]][arreglo[i][1]]=arreglo[i][opcion]
+  else:
+    init_graph={}
+    for node in Lista_nodos_sinRepetir:
+      init_graph[node]={}
+    for i in range(2,len(arreglo)):
+      try:
+        num=arreglo[i][opcion-1]*arreglo[i][opcion+1]
+      except:
+        num=float(arreglo[i][opcion-1])*0.5
+      if arreglo[i][4]=="True":
+        init_graph[arreglo[i][1]][arreglo[i][2]]=num
+      else:
+        init_graph[arreglo[i][1]][arreglo[i][2]]=num
+        init_graph[arreglo[i][2]][arreglo[i][1]]=num
+  return init_graph
+  
+def nodos_SinRepetir():
+  Lista_nodos_sinRepetir=[]
+  arreglo=np.array([["a","b","c","d","e","f","g"]])
+  arreglo=lector(arreglo)
+  Lista_nodos_repetidos=[]
+  for i in range(2,len(arreglo)):
+    Lista_nodos_repetidos.append(arreglo[i][1])
+    Lista_nodos_repetidos.append(arreglo[i][2])
+  for nodo in Lista_nodos_repetidos:
+    if nodo not in Lista_nodos_sinRepetir:
+      Lista_nodos_sinRepetir.append(nodo)
+  return Lista_nodos_sinRepetir,arreglo
+  
+def imprimirCamino(nodos_previos, nodo_inicial,nodo_final):
+  camino=[nodo_final]
+  while(nodo_final!=nodo_inicial):
+    camino.append(nodos_previos[nodo_final])
+    nodo_final=nodos_previos[nodo_final]
+  imprimir = list(reversed(camino))
+  return imprimir
+
+def graficarCamino(nodos_previos,opcion):
+    if opcion in [1,3]:
+      opcion=3
+    else:
+      opcion=5
+    with open('caminofinal.csv', 'w+') as file1:
+      escritor = csv.writer(file1, delimiter=';')
+      with open('medellin.csv', 'r') as file2:
+        lector = csv.reader(file2, delimiter=';')
+        for row in lector:
+          for j in range(len(nodos_previos)-1):
+            if (nodos_previos[j+1] == row[1] and nodos_previos[j] == row[2]):
+                row[opcion]=1000000
+            if (nodos_previos[j] == row[1] and nodos_previos[j+1] == row[2]):
+                row[opcion]=1000000
+          escritor.writerow(row)
+
+def mapa(opcion):
+  area = pd.read_csv('poligono_de_medellin.csv',sep=';')
+  print(area)
+  area['geometry'] = area['geometry'].apply(wkt.loads)
+  area = gpd.GeoDataFrame(area)
+  edges = pd.read_csv('caminofinal.csv',sep=';')
+  edges['geometry'] = edges['geometry'].apply(wkt.loads)
+  print
+  edges = gpd.GeoDataFrame(edges)
+  if opcion==2:
+    fig, ax = plt.subplots(figsize=(12,8))
+    area.plot(ax=ax, facecolor='black')
+    edges.plot(ax=ax, linewidth=0.3, column='harassmentRisk', legend=True, missing_kwds={'color': 'dimgray'})
+    plt.title("Camino menos acoso")
+    plt.tight_layout()
+    plt.savefig("acoso.png")
+  elif opcion==1:
+    fig, ax = plt.subplots(figsize=(12,8))
+    area.plot(ax=ax, facecolor='black')
+    edges.plot(ax=ax, linewidth=0.3, column='length', legend=True, missing_kwds={'color': 'dimgray'})
+    plt.title("Camino más corto")
+    plt.tight_layout()
+    plt.savefig("longitud.png")
+  else:
+    fig, ax = plt.subplots(figsize=(12,8))
+    area.plot(ax=ax, facecolor='black')
+    edges.plot(ax=ax, linewidth=0.3, column='length', legend=True, missing_kwds={'color': 'dimgray'})
+    plt.title("Camino tabulado entre distancia y acoso")
+    plt.tight_layout()
+    plt.savefig("tabulado.png")
+
+def main():
+  Lista_nodos_sinRepetir,arreglo=nodos_SinRepetir()
+  print("Bienvenido al interfaz de usuario. Recuerda que debes ingresar tu ubicación en forma de coordenada, al igual que la ubicación a la cual deseas llegar.")
+  nodo_inicial=input("Ingrese nodo de inicio: ")
+  while(nodo_inicial not in Lista_nodos_sinRepetir):
+    nodo_inicial=input("Su ubicación no ha sido encontrada. Ingrese su ubicación: ")
+  nodo_final=input("Ingrese nodo destino: ")
+  while(nodo_final not in Lista_nodos_sinRepetir):
+    nodo_final=input("Su destino no ha sido encontrada. Ingrese su destino: ")
+  print("Por último recuarda que puedes escoger entre 3 opciones de rutas distintas. La primera marcando un 1 te mostrará la ruta más corta. La opcióc 2 te mandará por el camino más seguro. Mientras que la opción 3 tiene en cuenta ambas variables para escoger un camino que tiene en cuenta ambas variables.")
+  opcion=int(input("Marca la opción escogida: "))
+  while(opcion not in [1,2,3]):
+    print("La opción marcada no se encuentra dentro del catalogo. Recuerda que puedes escoger entre 3 opciones de rutas distintas. La primera marcando un 1 te mostrará la ruta más corta. La opcióc 2 te mandará por el camino más seguro. Mientras que la opción 3 tiene en cuenta ambas variables para escoger un camino que tiene en cuenta ambas variables.")
+    opcion=int(input("Marca la opción escogida: ")) 
+  grafo=contruirgrafo(Lista_nodos_sinRepetir,arreglo,opcion)
+  nodos_previos,caminos_cortos=dijkstra_algorithm(grafo, nodo_inicial, nodo_final, Lista_nodos_sinRepetir,arreglo)
+  a_arreglo=imprimirCamino(nodos_previos,nodo_inicial,nodo_final)
+  print(a_arreglo)
+  graficarCamino(a_arreglo,opcion)
+  mapa(opcion)
+         
+main()
 
