@@ -57,28 +57,6 @@ def dijkstra_algorithm(init_graph, nodo_inicial, nodo_final, Lista_nodos_sinRepe
         nodos_sin_visitar.remove(nodo_minimo_actual)
     
     return Nodos_previos, camino_corto 
-
-def construirgrafo_longitud():
-  Lista_nodos_sinRepetir=[]
-  init_graph={}
-  arreglo=np.array([["a","b","c","d","e","f","g"]])
-  arreglo=lector(arreglo)
-  Lista_nodos_repetidos=[]
-  for i in range(2,len(arreglo)):
-    Lista_nodos_repetidos.append(arreglo[i][1])
-    Lista_nodos_repetidos.append(arreglo[i][2])
-  for nodo in Lista_nodos_repetidos:
-    if nodo not in Lista_nodos_sinRepetir:
-      Lista_nodos_sinRepetir.append(nodo)
-  for node in Lista_nodos_sinRepetir:
-    init_graph[node]={}
-  for i in range(2,len(arreglo)):
-    if arreglo[i][4]=="True":
-      init_graph[arreglo[i][1]][arreglo[i][2]]=arreglo[i][3]
-    else:
-      init_graph[arreglo[i][1]][arreglo[i][2]]=arreglo[i][3]
-      init_graph[arreglo[i][2]][arreglo[i][1]]=arreglo[i][3]
-  return init_graph
   
 def contruirgrafo(Lista_nodos_sinRepetir,arreglo,opcion):
   if opcion==1:
